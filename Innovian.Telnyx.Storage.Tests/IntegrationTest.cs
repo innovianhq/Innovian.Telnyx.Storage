@@ -1,0 +1,189 @@
+﻿//  -------------------------------------------------------------
+//  Copyright (c) 2023 Innovian Corporation. All rights reserved.
+//  -------------------------------------------------------------
+
+using System.Security.Cryptography;
+using Innovian.Telnyx.Storage.Enums;
+using Innovian.Telnyx.Storage.Exceptions;
+using Innovian.Telnyx.Storage.Services.Storage;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Innovian.Telnyx.Storage.Tests;
+
+[TestClass]
+public class IntegrationTest
+{
+    private const string BucketName = "integration-testing-bucket";
+    
+    private TelnyxStorageService BuildStorageService()
+    {
+        var services = new ServiceCollection();
+
+        var apiKey = Environment.GetEnvironmentVariable("TelnyApiKey");
+
+        services.AddTelnyxClient(opt =>
+        {
+            opt.TelnyxApiKey = apiKey;
+        });
+        var app = services.BuildServiceProvider();
+        var svc = app.GetRequiredService<TelnyxStorageService>();
+        return svc;
+    }
+
+    /// <summary>
+    /// Start with a potential clean-up task - if the bucket exists, retrieve all the keys in it, delete each
+    /// one and then delete the bucket.
+    /// </summary>
+    /// <returns></returns>
+    private async Task CleanupBucketAsync()
+    {
+        var storageSvc = BuildStorageService();
+
+        //Check to see if the bucket exists
+        var bucketCheck = await storageSvc.HeadBucketAsync(BucketName);
+        if (!bucketCheck)
+            return;
+
+        //Check to see if there's anything in the bucket
+        var objectList = await storageSvc.ListObjectsV2Async(BucketName);
+        if (objectList.Contents == null || objectList.Contents.Length == 0)
+            return;
+
+        //Delete all the keys in this bucket
+        await storageSvc.DeleteObjectsAsync(BucketName, objectList.Contents.Select(c => c.Key).ToList());
+
+        //Delete the bucket
+        await storageSvc.DeleteBucketAsync(BucketName);
+    }
+
+    [TestMethod]
+    public async Task EndToEndTest()
+    {
+        var storageSvc = BuildStorageService();
+
+        //Start with a potential clean up task
+        await CleanupBucketAsync();
+
+        const string fileName = "onemegabyte.txt";
+
+        //Test for non-existent bucket existence
+        const string nonExistentBucketName = "integration-nonexistent-test-bucket";
+        var nonExistentBucketExistenceCheck = await storageSvc.HeadBucketAsync(nonExistentBucketName);
+        Assert.IsFalse(nonExistentBucketExistenceCheck);
+
+        //Get the MD5 has of the input file
+        var originalHash = await ComputeFileHashAsync(fileName);
+        
+        //Create a bucket
+        await storageSvc.CreateBucketAsync(BucketName, LocationConstraint.Atlanta);
+
+        //Test that this bucket exists
+        var existingBucketExistenceCheck = await storageSvc.HeadBucketAsync(BucketName);
+        Assert.IsTrue(existingBucketExistenceCheck);
+
+        //List the buckets on the account - the non-existent bucket name should not exist, but the created one should
+        var existingBucketNames = await storageSvc.ListBucketsAsync();
+        Assert.IsTrue(existingBucketNames.HasValue);
+
+        //The non-existent bucket should not exist
+        Assert.IsTrue(existingBucketNames.Value.Buckets.All(b => b.Name != nonExistentBucketName));
+
+        //The created bucket should exist
+        Assert.IsTrue(existingBucketNames.Value.Buckets.Any(b => b.Name == BucketName));
+
+        //List the objects in the created bucket - should be none
+        var objectList1 = await storageSvc.ListObjectsV2Async(BucketName);
+        Assert.AreEqual(BucketName, objectList1.Name);
+        Assert.IsNull(objectList1.Contents);
+        
+        //Check for the presence of a non-existent item in the bucket
+        await Assert.ThrowsExceptionAsync<TargetNotFoundException>(async () =>
+            await storageSvc.HeadObjectAsync(BucketName, "nonexistent.jpg"));
+
+        //Upload an object to storage
+        await storageSvc.PutObjectAsync(BucketName, fileName, fileName);
+
+        //Check for the presence of this newly uploaded object in storage
+        var existingObjectHeadResult = await storageSvc.HeadObjectAsync(BucketName, fileName);
+        Assert.IsNotNull(existingObjectHeadResult.Date);
+        Assert.IsNotNull(existingObjectHeadResult.AcceptRanges);
+        Assert.IsNotNull(existingObjectHeadResult.RequestId);
+        Assert.IsNotNull(existingObjectHeadResult.Etag);
+        Assert.IsNotNull(existingObjectHeadResult.Server);
+
+        //Upload the file twice more with two different names
+        const string altFileName = "alt.txt";
+        const string altName1 = $"test/folder/{altFileName}";
+        
+        //Generate the byte array comprising a second file
+        const string altName2 = "test/folder/alt2.txt";
+        var altFileContents = new byte[500000];
+        for (var a = 0; a < altFileContents.Length; a++)
+        {
+            altFileContents[a] = 0x20;
+        }
+
+        //Upload from a file
+        await storageSvc.PutObjectAsync(BucketName, altName1, fileName);
+        //Upload from a byte array
+        await storageSvc.PutObjectAsync(BucketName, altName2, "alt2.txt", altFileContents);
+
+        //List the objects in the bucket
+        var objectList2 = await storageSvc.ListObjectsV2Async(BucketName);
+        Assert.IsNotNull(objectList2.Contents);
+        Assert.AreEqual(3, objectList2.Contents.Length);
+        Assert.IsTrue(objectList2.Contents.Any(a => a.Key == fileName));
+        Assert.IsTrue(objectList2.Contents.Any(a => a.Key == altName1));
+        Assert.IsTrue(objectList2.Contents.Any(a => a.Key == altName2));
+
+        //Delete the second alt object
+        await storageSvc.DeleteObjectAsync(BucketName, altName2);
+
+        //List all the objects remaining in the bucket
+        var objectList3 = await storageSvc.ListObjectsV2Async(BucketName);
+        Assert.IsNotNull(objectList3.Contents);
+        Assert.AreEqual(2, objectList3.Contents.Length);
+        Assert.IsTrue(objectList3.Contents.Any(a => a.Key == fileName));
+        Assert.IsTrue(objectList3.Contents.Any(a => a.Key == altName1));
+
+        //Attempting to download the deleted file should fail
+        await Assert.ThrowsExceptionAsync<TargetNotFoundException>(async () =>
+            await storageSvc.GetObjectAsync(BucketName, altName2));
+
+        //Download the second file and write to a local file
+        var altFileBytes = await storageSvc.GetObjectAsync(BucketName, altName1);
+        await File.WriteAllBytesAsync(altFileName, altFileBytes);
+
+        //Compare the hashes of the original file to this one
+        var altHash = await ComputeFileHashAsync(altFileName);
+        Assert.AreEqual(originalHash, altHash);
+        //Delete the local file
+        File.Delete(altFileName);
+        
+        //Delete the remaining files from the bucket
+        await storageSvc.DeleteObjectsAsync(BucketName, new List<string> {fileName, altName1});
+
+        //List the files in the bucket once more (should be empty)
+        var objectList4 = await storageSvc.ListObjectsV2Async(BucketName);
+        Assert.IsNull(objectList4.Contents);
+
+        //Delay 5 seconds just to ensure everything has been deleted on the server before attempting a bucket deletion
+        await Task.Delay(TimeSpan.FromSeconds(5));
+
+        //Delete the created bucket
+        await storageSvc.DeleteBucketAsync(BucketName);
+    }
+    
+    /// <summary>
+    /// Computes an MD5 hash from the specified file.
+    /// </summary>
+    /// <param name="fileName">The name of the file in the local directory to compute the hash for.</param>
+    /// <returns>The hex representation of the MD5 hash.</returns>
+    private async Task<string> ComputeFileHashAsync(string fileName)
+    {
+        await using var fs = File.OpenRead(fileName);
+        var md5 = MD5.Create();
+        var hash = BitConverter.ToString(await md5.ComputeHashAsync(fs));
+        return hash;
+    }
+}

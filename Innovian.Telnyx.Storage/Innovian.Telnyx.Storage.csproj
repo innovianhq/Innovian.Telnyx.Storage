@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Product>Telnyx Storage</Product>
+		<Company>Innovian</Company>
+		<Authors>Whit Waldo</Authors>
+		<Copyright>2023</Copyright>
+		<PackageProjectUrl>https://innovian.net</PackageProjectUrl>
+		<Description>An unofficial NuGet package used to interact with the Telnyx Storage API. Innovian is not associated with Telnyx in any way.</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="7.0.1" />
+	</ItemGroup>
+
+</Project>
