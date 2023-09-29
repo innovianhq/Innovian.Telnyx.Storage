@@ -64,12 +64,84 @@ public void ConfigureServices(IServiceCollection services)
 
 Manual DI registration (used if you need access to the service provider context to obtain the API key):
 ```cs
-//Assumes use of Startup.cs wherein `services` is an `IServiceCollection`. If using top-level statements, replace `services` with `builder.Services`
+// Assumes use of Startup.cs wherein `services` is an `IServiceCollection`.
+// If using top-level statements, replace `services` with `builder.Services`
 services.AddHttpClient(); //Mandatory so IHttpClientFactory is registered - handled for you in the above extension registrations
 services.AddSingleton(c => {
-  //Obtain the API key somehow here
-  //var apiKey = "";
+  var apiKey = ""; //Retrieve this from somewhere
   var httpFactory = c.GetRequiredService<IHttpClientFactory>();
   return new TelnyxStorageService(httpFactory, apiKey);
 });
+```
+
+You can register this library via Autofac as well by installing the [Autofac.Extensions.DependencyInjection](https://www.nuget.org/packages/Autofac.Extensions.DependencyInjection) package to your project first, then using the following snippet:
+```cs
+public static class CompositionRoot
+{
+  public static IContainer Builder()
+  {
+    var builder = new ContainerBuilder();
+    //...
+    var services = new ServiceCollection();
+    services.AddTelnyxClient(opt => {
+      opt.TelnyxApiKey = ""; //Retrieve this from somewhere
+    });
+    builder.Populate(services);
+    return builder.Build();
+  }
+}
+```
+
+Finally, this library also supports [delegate factories](https://docs.autofac.org/en/latest/advanced/delegate-factories.html) in case you want to register with [Autofac](https://www.nuget.org/packages/Autofac) and need to acquire the API key at a later point. This example uses the [Autofac.Extensions.DependencyInjection](https://www.nuget.org/packages/Autofac.Extensions.DependencyInjection) package to simplify registering the `IHttpClientFactory`.
+```cs
+//CompositionRoot.cs
+public class MyExample
+{
+  var builder = new ContainerBuilder();
+
+  //Register the TelnyxStorageService
+  builder.RegisterType<TelnyxStorageService>();
+
+  //Register the IHttpClientFactory
+  var services = new ServiceCollection();
+  services.AddHttpClient();
+  builder.Populate(services);
+  using var container = builder.Build();
+
+  //Create a local scope and retrieve the factory from the Autofac container
+  using var scope = container.BeginLifetimeScope();
+  var createStorageClient = scope.Resolve<TelnyxStorageService.Factory>();
+
+  //Autofac automatically injects the IHttpClientFactory for us, we just need to pass in the API key
+  var telnyxApiKey = ""; //Retrieve this from somewhere
+  var telnyxClient = createStorageClient(telnyxApiKey); //Returns an ITelnyxStorageService ready to use
+}
+```
+
+Or an example showing injection into another class after it's been registered:
+```cs
+public class MyOtherClass
+{
+  private readonly ITelenyxStorageService _telnyxClient;
+
+  public MyOtherClass(TelnyxStorageService.Factory telnyxFactory)
+  {
+    var telnyxApiKey = ""; //Retrieve this from somewhere
+    _telnyxClient = telnyxFactory(telnyxApiKey);
+  }
+
+  public async Task DoSomethingAsync()
+  {
+    //Do something...
+  }
+}
+```
+
+
+To use the service, inject the `TelnyxStorageService` into the constructor of the type you're using it in as in the following:
+```cs
+public class MyClass
+{
+  private readonly TelnyxStorageService _storageService;
+}
 ```
