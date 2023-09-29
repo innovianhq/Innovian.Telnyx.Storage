@@ -13,11 +13,6 @@ namespace Innovian.Telnyx.Storage.Tests;
 [TestClass]
 public class IntegrationTest
 {
-    /// <summary>
-    /// The name of the bucket used for testing.
-    /// </summary>
-    private string BucketName { get; init; } = $"integration-testing-{Guid.NewGuid().ToString()[..8].ToLower()}";
-    
     private static ITelnyxStorageService BuildStorageService()
     {
         var services = new ServiceCollection();
@@ -44,20 +39,20 @@ public class IntegrationTest
         var storageSvc = BuildStorageService();
 
         //Check to see if the bucket exists
-        var bucketCheck = await storageSvc.HeadBucketAsync(BucketName);
+        var bucketCheck = await storageSvc.HeadBucketAsync(Constants.BucketName);
         if (!bucketCheck)
             return;
 
         //Check to see if there's anything in the bucket
-        var objectList = await storageSvc.ListObjectsV2Async(BucketName);
+        var objectList = await storageSvc.ListObjectsV2Async(Constants.BucketName);
         if (objectList.Contents == null || objectList.Contents.Length == 0)
             return;
 
         //Delete all the keys in this bucket
-        await storageSvc.DeleteObjectsAsync(BucketName, objectList.Contents.Select(c => c.Key).ToList());
+        await storageSvc.DeleteObjectsAsync(Constants.BucketName, objectList.Contents.Select(c => c.Key).ToList());
 
         //Delete the bucket
-        await storageSvc.DeleteBucketAsync(BucketName);
+        await storageSvc.DeleteBucketAsync(Constants.BucketName);
     }
 
     [TestMethod]
@@ -79,10 +74,10 @@ public class IntegrationTest
         var originalHash = await ComputeFileHashAsync(fileName);
         
         //Create a bucket
-        await storageSvc.CreateBucketAsync(BucketName, LocationConstraint.Atlanta);
+        await storageSvc.CreateBucketAsync(Constants.BucketName, LocationConstraint.Atlanta);
 
         //Test that this bucket exists
-        var existingBucketExistenceCheck = await storageSvc.HeadBucketAsync(BucketName);
+        var existingBucketExistenceCheck = await storageSvc.HeadBucketAsync(Constants.BucketName);
         Assert.IsTrue(existingBucketExistenceCheck);
 
         //List the buckets on the account - the non-existent bucket name should not exist, but the created one should
@@ -93,22 +88,22 @@ public class IntegrationTest
         Assert.IsTrue(existingBucketNames.Value.Buckets.All(b => b.Name != nonExistentBucketName));
 
         //The created bucket should exist
-        Assert.IsTrue(existingBucketNames.Value.Buckets.Any(b => b.Name == BucketName));
+        Assert.IsTrue(existingBucketNames.Value.Buckets.Any(b => b.Name == Constants.BucketName));
 
         //List the objects in the created bucket - should be none
-        var objectList1 = await storageSvc.ListObjectsV2Async(BucketName);
-        Assert.AreEqual(BucketName, objectList1.Name);
+        var objectList1 = await storageSvc.ListObjectsV2Async(Constants.BucketName);
+        Assert.AreEqual(Constants.BucketName, objectList1.Name);
         Assert.IsNull(objectList1.Contents);
         
         //Check for the presence of a non-existent item in the bucket
         await Assert.ThrowsExceptionAsync<TargetNotFoundException>(async () =>
-            await storageSvc.HeadObjectAsync(BucketName, "nonexistent.jpg"));
+            await storageSvc.HeadObjectAsync(Constants.BucketName, "nonexistent.jpg"));
 
         //Upload an object to storage
-        await storageSvc.PutObjectAsync(BucketName, fileName, fileName);
+        await storageSvc.PutObjectAsync(Constants.BucketName, fileName, fileName);
 
         //Check for the presence of this newly uploaded object in storage
-        var existingObjectHeadResult = await storageSvc.HeadObjectAsync(BucketName, fileName);
+        var existingObjectHeadResult = await storageSvc.HeadObjectAsync(Constants.BucketName, fileName);
         Assert.IsNotNull(existingObjectHeadResult.Date);
         Assert.IsNotNull(existingObjectHeadResult.AcceptRanges);
         Assert.IsNotNull(existingObjectHeadResult.RequestId);
@@ -128,12 +123,12 @@ public class IntegrationTest
         }
 
         //Upload from a file
-        await storageSvc.PutObjectAsync(BucketName, altName1, fileName);
+        await storageSvc.PutObjectAsync(Constants.BucketName, altName1, fileName);
         //Upload from a byte array
-        await storageSvc.PutObjectAsync(BucketName, altName2, "alt2.txt", altFileContents);
+        await storageSvc.PutObjectAsync(Constants.BucketName, altName2, "alt2.txt", altFileContents);
 
         //List the objects in the bucket
-        var objectList2 = await storageSvc.ListObjectsV2Async(BucketName);
+        var objectList2 = await storageSvc.ListObjectsV2Async(Constants.BucketName);
         Assert.IsNotNull(objectList2.Contents);
         Assert.AreEqual(3, objectList2.Contents.Length);
         Assert.IsTrue(objectList2.Contents.Any(a => a.Key == fileName));
@@ -141,10 +136,10 @@ public class IntegrationTest
         Assert.IsTrue(objectList2.Contents.Any(a => a.Key == altName2));
 
         //Delete the second alt object
-        await storageSvc.DeleteObjectAsync(BucketName, altName2);
+        await storageSvc.DeleteObjectAsync(Constants.BucketName, altName2);
 
         //List all the objects remaining in the bucket
-        var objectList3 = await storageSvc.ListObjectsV2Async(BucketName);
+        var objectList3 = await storageSvc.ListObjectsV2Async(Constants.BucketName);
         Assert.IsNotNull(objectList3.Contents);
         Assert.AreEqual(2, objectList3.Contents.Length);
         Assert.IsTrue(objectList3.Contents.Any(a => a.Key == fileName));
@@ -152,10 +147,10 @@ public class IntegrationTest
 
         //Attempting to download the deleted file should fail
         await Assert.ThrowsExceptionAsync<TargetNotFoundException>(async () =>
-            await storageSvc.GetObjectAsync(BucketName, altName2));
+            await storageSvc.GetObjectAsync(Constants.BucketName, altName2));
 
         //Download the second file and write to a local file
-        var altFileBytes = await storageSvc.GetObjectAsync(BucketName, altName1);
+        var altFileBytes = await storageSvc.GetObjectAsync(Constants.BucketName, altName1);
         await File.WriteAllBytesAsync(altFileName, altFileBytes);
 
         //Compare the hashes of the original file to this one
@@ -165,17 +160,17 @@ public class IntegrationTest
         File.Delete(altFileName);
         
         //Delete the remaining files from the bucket
-        await storageSvc.DeleteObjectsAsync(BucketName, new List<string> {fileName, altName1});
+        await storageSvc.DeleteObjectsAsync(Constants.BucketName, new List<string> {fileName, altName1});
 
         //List the files in the bucket once more (should be empty)
-        var objectList4 = await storageSvc.ListObjectsV2Async(BucketName);
+        var objectList4 = await storageSvc.ListObjectsV2Async(Constants.BucketName);
         Assert.IsNull(objectList4.Contents);
 
         //Delay 5 seconds just to ensure everything has been deleted on the server before attempting a bucket deletion
         await Task.Delay(TimeSpan.FromSeconds(5));
 
         //Delete the created bucket
-        await storageSvc.DeleteBucketAsync(BucketName);
+        await storageSvc.DeleteBucketAsync(Constants.BucketName);
     }
     
     /// <summary>
