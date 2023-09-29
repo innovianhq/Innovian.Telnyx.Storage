@@ -25,4 +25,10 @@
     <ProjectReference Include="..\Telnyx.Storage.Dotnet\Innovian.Telnyx.Storage.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="onemegabyte.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
