@@ -51,9 +51,10 @@ steps:
     versioningScheme: 'byEnvVar'
     versionEnvVar: 'BuildNumber'
 
-- task: DotNetCoreCLI@2
+- task: PowerShell@2
+  displayName: 'push to NuGet.org'
   inputs:
-    command: 'push'
-    packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
-    nuGetFeedType: 'external'
-    publishFeedCredentials: 'InnovianNuget'
+    targetType: 'inline'
+    script: 'nuget push $(Build.ArtifactStagingDirectory)/*.nupkg -ApiKey $(NuGetApiKey) -Source https://api.nuget.org/v3/index.json'
+  env:
+    NuGetApiKey: $(NuGetApiKey)
