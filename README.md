@@ -118,7 +118,26 @@ public class MyExample
 }
 ```
 
-Or an example showing injection into another class after it's been registered:
+## Example usage
+To use the service, inject the `ITelnyxStorageService` interface into the constructor of the type you're using it in as in the following:
+```cs
+public class MyClass
+{
+  private readonly ITelnyxStorageService _storageService;
+
+  public MyClass (ITelnyxStorageService storageService)
+  {
+    _storageService = storageService;
+  }
+
+  public async Task DoSoemthingAsync()
+  {
+    //Do something...
+  }
+}
+```
+
+Here's an example showing injection into another class after it's been registered via Autofac's delegate factory approach:
 ```cs
 public class MyOtherClass
 {
@@ -137,11 +156,8 @@ public class MyOtherClass
 }
 ```
 
+## Contributing
+Contributions are welcome. 
 
-To use the service, inject the `TelnyxStorageService` into the constructor of the type you're using it in as in the following:
-```cs
-public class MyClass
-{
-  private readonly TelnyxStorageService _storageService;
-}
-```
+## License
+Innovian.Telnyx.Storage is MIT licensed.
