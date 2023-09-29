@@ -36,7 +36,6 @@ public class ListBucketResultTests
         var result = (ListBucketResult) serializer.Deserialize(sr);
 
         Assert.IsNotNull(result);
-        Assert.IsNotNull(result.Contents);
-        Assert.AreEqual(0, result.Contents.Length);
+        Assert.IsNull(result.Contents);
     }
 }
