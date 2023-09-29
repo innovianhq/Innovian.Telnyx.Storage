@@ -60,6 +60,6 @@ steps:
   displayName: 'push to NuGet.org'
   inputs:
     targetType: 'inline'
-    script: 'nuget push $(Build.ArtifactStagingDirectory)/*.nupkg -ApiKey $(NuGetApiKey) -Source https://api.nuget.org/v3/index.json'
+    script: 'nuget push "$(Build.ArtifactStagingDirectory)/*.nupkg" -ApiKey $(NuGetApiKey) -Source https://api.nuget.org/v3/index.json'
   env:
     NuGetApiKey: $(NuGetApiKey)
