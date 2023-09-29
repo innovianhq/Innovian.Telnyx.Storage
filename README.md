@@ -30,7 +30,7 @@ From within Visual Studio:
 ## Usage
 
 ### Authentication
-The Telnyx authenticates requests using the API key generated from within your Telnyx account. When logged into Telnyx, click on "Account Settings" in the left-nav to expand it, then select "Keys & Credentials" from the list that appears. You'll be looking at a page title "API Keys". Either use an existing and active 
+The Telnyx API authenticates requests using the API key generated from within your Telnyx account. When logged into Telnyx, click on "Account Settings" in the left-nav to expand it, then select "Keys & Credentials" from the list that appears. You'll be looking at a page title "API Keys". Either use an existing and active 
 API key by clicking the "copy" button to the right of any of the keys listed in the table or click the green button labeled "Create API Key" in the top right of the page, then click Create and Copy to generate and copy the newly created API key to your clipboard. This API key typically starts with "KEY..."
 
 Any of these keys can be used with this library or the official Telnyx libraries for the other functionality without restriction.
