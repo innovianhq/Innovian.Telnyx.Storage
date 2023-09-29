@@ -1,5 +1,5 @@
 # Innovian.Telnyx.Storage
-[![Build Status](https://dev.azure.com/innovian/Innovian%20Open%20Source/_apis/build/status%2Finnovianhq.Innovian.Telnyx.Storage?branchName=main)](https://dev.azure.com/innovian/Innovian%20Open%20Source/_build/latest?definitionId=289&branchName=main)
+[![Build Status](https://dev.azure.com/innovian/Innovian%20Open%20Source/_apis/build/status%2Finnovianhq.Innovian.Telnyx.Storage?branchName=main)](https://dev.azure.com/innovian/Innovian%20Open%20Source/_build/latest?definitionId=289&branchName=main) [![NuGet](https://img.shields.io/nuget/v/Innovian.Telnyx.Storage.svg)](https://www.nuget.org/packages/Innovian.Telnyx.Storage/)
 
 This is an unofficial .NET library for the Telnyx Storage API, targetting .NET 7 built by [Innovian](https://innovian.net).
 
