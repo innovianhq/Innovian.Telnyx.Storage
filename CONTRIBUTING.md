@@ -1,11 +1,12 @@
 # Contributing to the Telnyx Storage client
 ## Found an issue?
-If you find a bug in the source code or a mistake in the documentation, you can help us out by [submitting an issue][submitissue] to our [GitHub repository][github]. Even better, you can submit a [Pull Request](#submit-pr) with a fix.
+If you find a bug in the source code or a mistake in the documentation, you can help us out by [submitting an issue](https://github.com/innovianhq/Innovian.Telnyx.Storage/issues/new/choose) to our [GitHub repository](https://github.com/innovianhq/Innovian.Telnyx.Storage). Even better, you can submit a [Pull Request](#submit-pr) with a fix.
 
 ## <a name="feature"></a> Want a feature?
-You can *request* a new feature by [submitting an issue][submitissue] to our [GitHub repositpry][github]. If you would like to *implement* a new feature, please submit an issue with your proposed work first before getting started so we can confirm whether we'd accept it or not. We don't want to waste your time, after all. 
+You can *request* a new feature by [submitting an issue](https://github.com/innovianhq/Innovian.Telnyx.Storage/issues/new/choose) to our [GitHub repositpry](https://github.com/innovianhq/Innovian.Telnyx.Storage). If you would like to *implement* a new feature, please submit an issue with your proposed work first before getting started so we can confirm whether we'd accept it or not. We don't want to waste your time, after all. 
 
-If you would deem the change a **Major Feature**, open an issue and outline your proposal so it can be discussed. This will allow better work coordination, prevent duplication of work and help you craft the change so it'll be successfully accepted into the project.  For a **Small Feature**, feel free to write it and directly submit it as a [pull request](#submit-pr).
+* If you would deem the change a **Major Feature**, open an issue and outline your proposal so it can be discussed. This will allow better work coordination, prevent duplication of work and help you craft the change so it'll be successfully accepted into the project.
+* For a **Small Feature**, feel free to write it and directly submit it as a [pull request](#submit-pr).
 
 ### <a name="submit-pr"></a> Submitting a Pull Request (PR)
 Before submitting your Pull Request (PR) consider the following guidelines:
