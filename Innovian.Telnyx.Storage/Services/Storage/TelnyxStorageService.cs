@@ -18,7 +18,7 @@ using Microsoft.Extensions.Options;
 
 namespace Innovian.Telnyx.Storage.Services.Storage;
 
-public sealed class TelnyxStorageService
+public sealed class TelnyxStorageService : ITelnyxStorageService
 {
     /// <summary>
     /// Used to create the HttpClient instances.
@@ -50,7 +50,7 @@ public sealed class TelnyxStorageService
     /// <param name="httpClientFactory">The factory used to create the HttpClient instances.</param>
     /// <param name="apiKey">The API key as resolved at run-time.</param>
     /// <returns></returns>
-    public delegate TelnyxStorageService Factory(IHttpClientFactory httpClientFactory, string apiKey);
+    public delegate TelnyxStorageService Factory(string apiKey, IHttpClientFactory httpClientFactory);
 
     /// <summary>
     /// Used to instantiate this class via the DI factory.

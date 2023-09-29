@@ -30,6 +30,6 @@ public static class ServiceCollectionExtensions
 
         return services
             .AddHttpClient()
-            .AddSingleton<TelnyxStorageService>();
+            .AddSingleton<ITelnyxStorageService, TelnyxStorageService>();
     }
 }
