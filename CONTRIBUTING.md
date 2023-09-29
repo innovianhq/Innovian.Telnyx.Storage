@@ -14,7 +14,7 @@ Before submitting your Pull Request (PR) consider the following guidelines:
   ```shell
   git checkout -b my-fix-branch-main
   ```
-* Create your patch
+* Create your patch and add unit tests where possible.
 * Commit your changes using a descriptive commit message.
 * Push your branch to GitHub:
   ```shell
