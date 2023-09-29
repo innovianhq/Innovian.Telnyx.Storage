@@ -35,6 +35,7 @@ API key by clicking the "copy" button to the right of any of the keys listed in 
 
 Any of these keys can be used with this library or the official Telnyx libraries for the other functionality without restriction.
 
+### Dependency Injection Registration
 Dependency injection using top-level statements:
 ```cs
 var builder = WebApplication.CreateBuilder(args);
