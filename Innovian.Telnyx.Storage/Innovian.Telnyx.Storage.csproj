@@ -8,7 +8,7 @@
 		<Company>Innovian</Company>
 		<Authors>Whit Waldo</Authors>
 		<Copyright>2023</Copyright>
-		<PackageProjectUrl>https://innovian.net</PackageProjectUrl>
+		<PackageProjectUrl>https://github.com/innovianhq/Innovian.Telnyx.Storage</PackageProjectUrl>
 		<Description>An unofficial NuGet package used to interact with the Telnyx Storage API. Innovian is not associated with Telnyx in any way.</Description>
 	</PropertyGroup>
 
