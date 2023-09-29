@@ -160,7 +160,7 @@ public class MyOtherClass
 The unit tests most run through one integrated test which iterates through all the functionality in the library. It requires an active API key to run through the tests and will briefly incur charges (though it's likely to fit well within the free usage threshold). Your API key will need to be stored in an environment variable named "TelnyxApiKey" for the test runner to pick it up. In order for the tests to pass, the bucket name **must** not be in use. The tests use a GUID as part of the name generation, so this generally shouldn't be a problem, but heads up nonetheless.
 
 ## Contributing
-Contributions are welcome. 
+Contributions are welcome. Please read our [contributing guide](./CONTRIBUTING.md) to learn more about filing issues and submitting PRs.
 
 ## License
 Innovian.Telnyx.Storage is MIT licensed.
