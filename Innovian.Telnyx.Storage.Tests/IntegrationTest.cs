@@ -13,21 +13,25 @@ namespace Innovian.Telnyx.Storage.Tests;
 [TestClass]
 public class IntegrationTest
 {
-    private const string BucketName = "integration-testing-bucket";
+    /// <summary>
+    /// The name of the bucket used for testing.
+    /// </summary>
+    private string BucketName { get; init; } = $"integration-testing-{Guid.NewGuid().ToString()[..8].ToLower()}";
     
-    private TelnyxStorageService BuildStorageService()
+    private static ITelnyxStorageService BuildStorageService()
     {
         var services = new ServiceCollection();
 
-        var apiKey = Environment.GetEnvironmentVariable("TelnyApiKey");
+        var apiKey = Environment.GetEnvironmentVariable("TelnyxApiKey");
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new Exception("Telnyx API key not found");
 
         services.AddTelnyxClient(opt =>
         {
             opt.TelnyxApiKey = apiKey;
         });
         var app = services.BuildServiceProvider();
-        var svc = app.GetRequiredService<TelnyxStorageService>();
-        return svc;
+        return app.GetRequiredService<ITelnyxStorageService>();
     }
 
     /// <summary>

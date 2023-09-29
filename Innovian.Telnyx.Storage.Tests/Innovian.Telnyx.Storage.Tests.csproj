@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Innovian.Telnyx.Storage\Innovian.Telnyx.Storage.csproj" />
     <ProjectReference Include="..\Telnyx.Storage.Dotnet\Innovian.Telnyx.Storage.csproj" />
   </ItemGroup>
 
