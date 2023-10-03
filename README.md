@@ -165,4 +165,4 @@ The unit tests most run through one integrated test which iterates through all t
 Contributions are welcome. Please read our [contributing guide](./CONTRIBUTING.md) to learn more about filing issues and submitting PRs.
 
 ## License
-[Innovian.Telnyx.Storage](https://github.com/innovianhq/Innovian.Telnyx.Storage) is [MIT licensed](./LICENSE).
+[Innovian.Telnyx.Storage](https://github.com/innovianhq/Innovian.Telnyx.Storage) is licensed for use under the [Apache 2.0 license](./LICENSE).
