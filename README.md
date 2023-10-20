@@ -35,6 +35,7 @@ API key by clicking the "copy" button to the right of any of the keys listed in 
 
 Any of these keys can be used with this library or the official Telnyx libraries for the other functionality without restriction.
 
+### Dependency Injection Registration
 Dependency injection using top-level statements:
 ```cs
 var builder = WebApplication.CreateBuilder(args);
@@ -164,4 +165,4 @@ The unit tests most run through one integrated test which iterates through all t
 Contributions are welcome. Please read our [contributing guide](./CONTRIBUTING.md) to learn more about filing issues and submitting PRs.
 
 ## License
-[Innovian.Telnyx.Storage](https://github.com/innovianhq/Innovian.Telnyx.Storage) is MIT licensed.
+[Innovian.Telnyx.Storage](https://github.com/innovianhq/Innovian.Telnyx.Storage) is licensed for use under the [Apache 2.0 license](./LICENSE).
