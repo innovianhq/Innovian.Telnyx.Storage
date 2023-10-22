@@ -10,7 +10,7 @@ namespace Innovian.Telnyx.Storage.Services.Storage.Responses;
 public sealed record ListBucketResult
 {
     [XmlElement("Name")]
-    public string Name { get; init; }
+    public string Name { get; init; } = string.Empty;
 
     [XmlElement("Contents", IsNullable = true)]
     public Content[]? Contents { get; init; }
@@ -19,13 +19,13 @@ public sealed record ListBucketResult
 public sealed record Content
 {
     [XmlElement("Key")]
-    public string Key { get; init; }
+    public string Key { get; init; } = string.Empty;
 
     [XmlElement("Size")]
     public int Size { get; init; }
 
     [XmlElement("LastModified")]
-    public string LastModifiedRaw { get; init; }
+    public string LastModifiedRaw { get; init; } = string.Empty;
 
     [XmlIgnore]
     public DateTime LastModified => DateTime.Parse(LastModifiedRaw);

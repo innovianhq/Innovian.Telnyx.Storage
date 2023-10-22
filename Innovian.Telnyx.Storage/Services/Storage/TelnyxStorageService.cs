@@ -25,13 +25,14 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// </summary>
     private readonly IHttpClientFactory _httpClientFactory;
     /// <summary>
-    /// The base address to make the requests to.
-    /// </summary>
-    private const string BaseAddress = "https://storage.telnyx.com";
-    /// <summary>
     /// The client configuration options.
     /// </summary>
     private readonly TelnyxClientOptions _options;
+
+    /// <summary>
+    /// A local cache of the endpoints to use for each bucket to avoid frequent lookups.
+    /// </summary>
+    private readonly Dictionary<string, string> _bucketEndpointCache = new();
     
     /// <summary>
     /// Typical means of registering the Telnyx storage service if initially provisioned with a known key.
@@ -75,7 +76,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns></returns>
     public async Task<ConditionalValue<ListAllMyBucketsResult>> ListBucketsAsync(CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/");
+        var uri = new Uri("https://storage.telnyx.com/"); //Intended endpoint per email notification 10/9/2023
 
         var client = BuildHttpClient();
         var response = await client.GetAsync(uri, cancellationToken);
@@ -92,10 +93,39 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     }
 
     /// <summary>
+    /// Gets a specific bucket's location.
+    /// </summary>
+    /// <param name="bucketName">The name of the bucket.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    public async Task<ConditionalValue<GetBucketLocationResult>> GetBucketLocationAsync(string bucketName,
+        CancellationToken cancellationToken = default)
+    {
+        var uri = new Uri($"https://storage.telnyx.com/{bucketName}?location"); //Intended endpoint per email notification 10/9/2023
+
+        var client = BuildHttpClient();
+        var response = await client.GetAsync(uri, cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var serializer = new XmlSerializer(typeof(GetBucketLocationResult));
+            using var stringReader = new StringReader(await response.Content.ReadAsStringAsync(cancellationToken));
+            var deserializedValue = (GetBucketLocationResult) serializer.Deserialize(stringReader);
+
+            //Update the cache with the identified value
+            _bucketEndpointCache[bucketName.ToLowerInvariant()] = deserializedValue.LocationConstraint;
+
+            return new ConditionalValue<GetBucketLocationResult>(deserializedValue);
+        }
+
+        return new ConditionalValue<GetBucketLocationResult>();
+    }
+
+    /// <summary>
     /// Creates a bucket.
     /// </summary>
     /// <param name="bucketName">The name of the bucket.</param>
-    /// <param name="locationConstraint">The region to create the bucket in.</param>
+    /// <param name="locationConstraint">The location to create the bucket in and submit all future requests to.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
     public async Task CreateBucketAsync(string bucketName, LocationConstraint locationConstraint = LocationConstraint.Dallas, CancellationToken cancellationToken = default)
@@ -103,7 +133,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         if (!Validators.IsBucketNameValid(bucketName))
             throw new ValidityFailureException(Validators.BucketNameValidityMessage);
 
-        var uri = new Uri($"{BaseAddress}/{bucketName}");
+        var uri = new Uri($"https://{locationConstraint.GetValueFromEnumMember()}.telnyxstorage.com/{bucketName}");
         
         var serializer = new XmlSerializer(typeof(CreateBucketConfiguration));
         await using var stream = new StringWriter();
@@ -111,6 +141,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         {
             LocationConstraint = locationConstraint.GetValueFromEnumMember()
         });
+
         var xml = stream.ToString();
         var requestBody = new StringContent(xml, Encoding.UTF8, "application/xml");
 
@@ -136,10 +167,19 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <param name="cancellationToken">Cancellation token.</param>
     public async Task DeleteBucketAsync(string bucketName, CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/{bucketName}");
+        //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        if (!baseAddress.HasValue)
+            throw new TargetNotFoundException();
 
+        var uri = new Uri($"{baseAddress.Value}/{bucketName}");
+
+        //Delete the bucket from Telnyx
         var client = BuildHttpClient();
         await client.DeleteAsync(uri, cancellationToken);
+
+        //Delete the bucket location from the cache
+        _bucketEndpointCache.Remove(bucketName.ToLowerInvariant());
     }
 
     /// <summary>
@@ -150,7 +190,12 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns></returns>
     public async Task<bool> HeadBucketAsync(string bucketName, CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/{bucketName}");
+        //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        if (!baseAddress.HasValue)
+            return false;
+
+        var uri = new Uri($"{baseAddress.Value}/{bucketName}");
 
         var client = BuildHttpClient();
         var msg = new HttpRequestMessage(HttpMethod.Head, uri);
@@ -172,7 +217,12 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns></returns>
     public async Task DeleteObjectAsync(string bucketName, string objectName, CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/{bucketName}/{objectName}");
+        //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        if (!baseAddress.HasValue)
+            throw new TargetNotFoundException();
+
+        var uri = new Uri($"{baseAddress.Value}/{bucketName}/{objectName}");
 
         var client = BuildHttpClient();
         await client.DeleteAsync(uri, cancellationToken);
@@ -188,7 +238,12 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns>The bytes comprising the object.</returns>
     public async Task<byte[]> GetObjectAsync(string bucketName, string objectName, string? uploadId = null, CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/{bucketName}/{objectName}{(uploadId == null ? "" : $"?uploadId={uploadId}")}");
+        //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        if (!baseAddress.HasValue)
+            throw new TargetNotFoundException();
+
+        var uri = new Uri($"{baseAddress.Value}/{bucketName}/{objectName}{(uploadId == null ? "" : $"?uploadId={uploadId}")}");
 
         var client = BuildHttpClient();
         client.DefaultRequestHeaders.Add("Accept", "application/octet-stream");
@@ -218,7 +273,12 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns></returns>
     public async Task<HeadObjectResponse> HeadObjectAsync(string bucketName, string objectName, CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/{bucketName}/{objectName}");
+        //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        if (!baseAddress.HasValue)
+            throw new TargetNotFoundException();
+
+        var uri = new Uri($"{baseAddress.Value}/{bucketName}/{objectName}");
 
         var client = BuildHttpClient();
         var msg = new HttpRequestMessage(HttpMethod.Head, uri);
@@ -272,7 +332,12 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns></returns>
     public async Task PutObjectAsync(string bucketName, string objectName, string filePath, CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/{bucketName}/{objectName}");
+        //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        if (!baseAddress.HasValue)
+            throw new TargetNotFoundException();
+
+        var uri = new Uri($"{baseAddress.Value}/{bucketName}/{objectName}");
 
         var client = BuildHttpClient();
         client.DefaultRequestHeaders.Add("x-amz-server-side-encryption", "1");
@@ -306,7 +371,12 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns></returns>
     public async Task PutObjectAsync(string bucketName, string objectName, string fileName, byte[] content, CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/{bucketName}/{objectName}");
+        //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        if (!baseAddress.HasValue)
+            throw new TargetNotFoundException();
+
+        var uri = new Uri($"{baseAddress.Value}/{bucketName}/{objectName}");
 
         var client = BuildHttpClient();
         client.DefaultRequestHeaders.Add("x-amz-server-side-encryption", "1");
@@ -338,7 +408,12 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns></returns>
     public async Task DeleteObjectsAsync(string bucketName, List<string> keys, CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/{bucketName}?delete=true");
+        //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        if (!baseAddress.HasValue)
+            throw new TargetNotFoundException();
+
+        var uri = new Uri($"{baseAddress.Value}/{bucketName}?delete=true");
         var req = new DeleteObjectsRequest
         {
             Objects = keys.Select(k => new DeleteObject
@@ -366,7 +441,12 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns></returns>
     public async Task<ListBucketResult> ListObjectsV2Async(string bucketName, CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"{BaseAddress}/{bucketName}?list-type=2");
+        //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        if (!baseAddress.HasValue)
+            throw new TargetNotFoundException();
+
+        var uri = new Uri($"{baseAddress.Value}/{bucketName}?list-type=2");
 
         var client = BuildHttpClient();
         var response = await client.GetAsync(uri, cancellationToken);
@@ -400,6 +480,33 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
             $"AWS4-HMAC-SHA256 Credential={_options.TelnyxApiKey}/useast-1-execute-api-aws2_request");
 
         return httpClient;
+    }
+
+    /// <summary>
+    /// Calculates the base address for a given bucket name.
+    /// </summary>
+    /// <param name="bucketName">The name of the bucket.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    private async Task<ConditionalValue<string>> GetBaseAddress(string bucketName, CancellationToken cancellationToken)
+    {
+        //Determine if the cache contains the bucket name
+        var cacheKey = bucketName.ToLowerInvariant();
+        if (_bucketEndpointCache.ContainsKey(cacheKey))
+        {
+            //Retrieve the location of the bucket
+            var bucketLocation = await GetBucketLocationAsync(bucketName, cancellationToken);
+
+            if (!bucketLocation.HasValue)
+                return new ConditionalValue<string>();
+
+            //Update the cache
+            _bucketEndpointCache[cacheKey] = bucketLocation.Value.LocationConstraint;
+
+            return new ConditionalValue<string>($"https://{bucketLocation.Value.LocationConstraint}.telnyxstorage.com");
+        }
+
+        return new ConditionalValue<string>();
     }
 
     /// <summary>

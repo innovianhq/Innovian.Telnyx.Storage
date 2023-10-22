@@ -17,7 +17,7 @@ public class IntegrationTest
     {
         var services = new ServiceCollection();
 
-        var apiKey = Environment.GetEnvironmentVariable("TelnyxApiKey");
+        var apiKey = Environment.GetEnvironmentVariable("TelnyxApiKey", EnvironmentVariableTarget.Machine);
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new Exception("Telnyx API key not found");
 
@@ -74,7 +74,10 @@ public class IntegrationTest
         var originalHash = await ComputeFileHashAsync(fileName);
         
         //Create a bucket
-        await storageSvc.CreateBucketAsync(Constants.BucketName, LocationConstraint.Atlanta);
+        await storageSvc.CreateBucketAsync(Constants.BucketName, LocationConstraint.Dallas);
+
+        //Get the bucket location
+        var bucketLocation = await storageSvc.GetBucketLocationAsync(Constants.BucketName);
 
         //Test that this bucket exists
         var existingBucketExistenceCheck = await storageSvc.HeadBucketAsync(Constants.BucketName);

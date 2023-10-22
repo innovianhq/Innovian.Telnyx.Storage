@@ -18,6 +18,15 @@ public interface ITelnyxStorageService
     Task<ConditionalValue<ListAllMyBucketsResult>> ListBucketsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a specific bucket's location.
+    /// </summary>
+    /// <param name="bucketName">The name of the bucket.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns></returns>
+    Task<ConditionalValue<GetBucketLocationResult>> GetBucketLocationAsync(string bucketName,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Creates a bucket.
     /// </summary>
     /// <param name="bucketName">The name of the bucket.</param>
