@@ -18,6 +18,8 @@ public static class ServiceCollectionExtensions
             //Set the API key with the values from IOptions<TelnyxClientOptiosn>
             options.TelnyxApiKey = options.Value.TelnyxApiKey;
         });
+
+        return AddTelnyxClient(null);
     }
 
     /// <summary>
