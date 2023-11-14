@@ -18,7 +18,7 @@ public class IntegrationTest
     {
         var services = new ServiceCollection();
 
-        var apiKey = Environment.GetEnvironmentVariable("TelnyxApiKey", EnvironmentVariableTarget.Machine);
+        var apiKey = Environment.GetEnvironmentVariable("Telnyx_ApiKey");
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new Exception("Telnyx API key not found");
 
