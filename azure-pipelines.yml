@@ -1,5 +1,12 @@
 name: $(date:yyyy.MM.dd)$(rev:.r)
 
+schedules:
+- cron: '0 6 * * *'
+  displayName: 'Daily 6AM Test Run'
+  branches:
+    include:
+    - main
+
 trigger:
   batch: true
   branches: 
@@ -43,6 +50,7 @@ steps:
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet build'
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'Schedule'))
   inputs:
     command: 'build'
     projects: '**/$(ProjectName).csproj'
@@ -50,6 +58,7 @@ steps:
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet pack'
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'Schedule'))
   inputs:
     command: 'pack'
     packagesToPack: '**/$(ProjectName).csproj'
@@ -58,6 +67,7 @@ steps:
 
 - task: PowerShell@2
   displayName: 'push to NuGet.org'
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'Schedule'))
   inputs:
     targetType: 'inline'
     script: 'nuget push "$(Build.ArtifactStagingDirectory)\*.nupkg" -ApiKey $(NuGetApiKey) -Source https://api.nuget.org/v3/index.json'
