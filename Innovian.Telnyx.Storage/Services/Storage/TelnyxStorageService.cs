@@ -99,27 +99,27 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <param name="bucketName">The name of the bucket.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    public async Task<ConditionalValue<GetBucketLocationResult>> GetBucketLocationAsync(string bucketName,
+    public async Task<ConditionalValue<string>> GetBucketLocationAsync(string bucketName,
         CancellationToken cancellationToken = default)
     {
-        var uri = new Uri($"https://storage.telnyx.com/{bucketName}?location"); //Intended endpoint per email notification 10/9/2023
+        var uri = new Uri($"https://telnyxstorage.com/{bucketName}?location=null"); //Intended endpoint per email notification 10/9/2023
 
         var client = BuildHttpClient();
         var response = await client.GetAsync(uri, cancellationToken);
 
-        if (response.StatusCode == HttpStatusCode.OK)
+        var parser = new RegexResultParser();
+        using var stringReader = new StringReader(await response.Content.ReadAsStringAsync(cancellationToken));
+        var deserializedValue = parser.ParseBucketLocationResult(await stringReader.ReadToEndAsync(cancellationToken));
+
+        if (response.StatusCode == HttpStatusCode.OK && deserializedValue != null)
         {
-            var serializer = new XmlSerializer(typeof(GetBucketLocationResult));
-            using var stringReader = new StringReader(await response.Content.ReadAsStringAsync(cancellationToken));
-            var deserializedValue = (GetBucketLocationResult) serializer.Deserialize(stringReader);
-
             //Update the cache with the identified value
-            _bucketEndpointCache[bucketName.ToLowerInvariant()] = deserializedValue.LocationConstraint;
+            _bucketEndpointCache[bucketName.ToLowerInvariant()] = deserializedValue;
 
-            return new ConditionalValue<GetBucketLocationResult>(deserializedValue);
+            return new ConditionalValue<string>(deserializedValue);
         }
 
-        return new ConditionalValue<GetBucketLocationResult>();
+        return new ConditionalValue<string>();
     }
 
     /// <summary>
@@ -504,9 +504,9 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
                 return new ConditionalValue<string>();
 
             //Update the cache
-            _bucketEndpointCache[cacheKey] = bucketLocation.Value.LocationConstraint;
+            _bucketEndpointCache[cacheKey] = bucketLocation.Value;
 
-            return new ConditionalValue<string>($"https://{bucketName}.{bucketLocation.Value.LocationConstraint}.telnyxstorage.com");
+            return new ConditionalValue<string>($"https://{bucketName}.{bucketLocation.Value}.telnyxstorage.com");
         }
 
         return new ConditionalValue<string>();

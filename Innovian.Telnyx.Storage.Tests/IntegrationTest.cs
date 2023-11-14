@@ -80,7 +80,7 @@ public class IntegrationTest
         //Get the bucket location
         var bucketLocation = await storageSvc.GetBucketLocationAsync(Constants.BucketName);
         Assert.IsTrue(bucketLocation.HasValue);
-        Assert.AreEqual(bucketLocation.Value.LocationConstraint, LocationConstraint.Central.GetValueFromEnumMember());
+        Assert.AreEqual(bucketLocation.Value, LocationConstraint.Central.GetValueFromEnumMember());
 
         //Test that this bucket exists
         var existingBucketExistenceCheck = await storageSvc.HeadBucketAsync(Constants.BucketName);

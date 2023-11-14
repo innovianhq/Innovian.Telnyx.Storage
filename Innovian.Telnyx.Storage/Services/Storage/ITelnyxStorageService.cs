@@ -23,7 +23,7 @@ public interface ITelnyxStorageService
     /// <param name="bucketName">The name of the bucket.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    Task<ConditionalValue<GetBucketLocationResult>> GetBucketLocationAsync(string bucketName,
+    Task<ConditionalValue<string>> GetBucketLocationAsync(string bucketName,
         CancellationToken cancellationToken = default);
 
     /// <summary>
