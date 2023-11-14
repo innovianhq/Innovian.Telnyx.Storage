@@ -13,6 +13,7 @@ using Innovian.Telnyx.Storage.Exceptions;
 using Innovian.Telnyx.Storage.Extensions;
 using Innovian.Telnyx.Storage.Services.Storage.Requests;
 using Innovian.Telnyx.Storage.Services.Storage.Responses;
+using Innovian.Telnyx.Storage.Utilities;
 using Innovian.Telnyx.Storage.Validation;
 using Microsoft.Extensions.Options;
 
@@ -134,10 +135,10 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         if (!Validators.IsBucketNameValid(bucketName))
             throw new ValidityFailureException(Validators.BucketNameValidityMessage);
 
-        var uri = new Uri($"https://{bucketName}.{locationConstraint.GetValueFromEnumMember()}.telnyxstorage.com/");
+        var uri = new Uri($"https://{locationConstraint.GetValueFromEnumMember()}.telnyxstorage.com/{bucketName}");
         
         var serializer = new XmlSerializer(typeof(CreateBucketConfiguration));
-        await using var stream = new StringWriter();
+        await using var stream = new Utf8StringWriter();
         serializer.Serialize(stream, new CreateBucketConfiguration
         {
             LocationConstraint = locationConstraint.GetValueFromEnumMember()
@@ -505,7 +506,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
             //Update the cache
             _bucketEndpointCache[cacheKey] = bucketLocation.Value.LocationConstraint;
 
-            return new ConditionalValue<string>($"https://{bucketLocation.Value.LocationConstraint}.telnyxstorage.com");
+            return new ConditionalValue<string>($"https://{bucketName}.{bucketLocation.Value.LocationConstraint}.telnyxstorage.com");
         }
 
         return new ConditionalValue<string>();
