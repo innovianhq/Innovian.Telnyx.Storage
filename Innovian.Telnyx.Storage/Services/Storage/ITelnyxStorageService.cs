@@ -31,9 +31,10 @@ public interface ITelnyxStorageService
     /// </summary>
     /// <param name="bucketName">The name of the bucket.</param>
     /// <param name="locationConstraint">The region to create the bucket in.</param>
+    /// <param name="isPublic">Indicates the visibility of the bucket.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    Task CreateBucketAsync(string bucketName, LocationConstraint locationConstraint, CancellationToken cancellationToken = default);
+    Task CreateBucketAsync(string bucketName, LocationConstraint locationConstraint, bool isPublic, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a bucket.

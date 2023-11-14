@@ -1,6 +1,6 @@
-﻿//  -------------------------------------------------------------
-//  Copyright (c) 2023 Innovian Corporation. All rights reserved.
-//  -------------------------------------------------------------
+﻿// -------------------------------------------------------------
+// Copyright (c) 2023 Innovian Corporation. All rights reserved.
+// -------------------------------------------------------------
 
 using System.Net;
 using System.Net.Http.Headers;
@@ -126,14 +126,15 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// </summary>
     /// <param name="bucketName">The name of the bucket.</param>
     /// <param name="locationConstraint">The location to create the bucket in and submit all future requests to.</param>
+    /// <param name="isPublic">Indicates the visibility of the bucket.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    public async Task CreateBucketAsync(string bucketName, LocationConstraint locationConstraint = LocationConstraint.Dallas, CancellationToken cancellationToken = default)
+    public async Task CreateBucketAsync(string bucketName, LocationConstraint locationConstraint, bool isPublic, CancellationToken cancellationToken = default)
     {
         if (!Validators.IsBucketNameValid(bucketName))
             throw new ValidityFailureException(Validators.BucketNameValidityMessage);
 
-        var uri = new Uri($"https://{locationConstraint.GetValueFromEnumMember()}.telnyxstorage.com/{bucketName}");
+        var uri = new Uri($"https://{bucketName}.{locationConstraint.GetValueFromEnumMember()}.telnyxstorage.com/");
         
         var serializer = new XmlSerializer(typeof(CreateBucketConfiguration));
         await using var stream = new StringWriter();
@@ -144,6 +145,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
 
         var xml = stream.ToString();
         var requestBody = new StringContent(xml, Encoding.UTF8, "application/xml");
+        requestBody.Headers.Add("x-amz-acl", isPublic ? "public-read" : "private");
 
         var client = BuildHttpClient();
         var response = await client.PutAsync(uri, requestBody, cancellationToken);
