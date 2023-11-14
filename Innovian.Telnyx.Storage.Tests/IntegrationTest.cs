@@ -179,6 +179,10 @@ public class IntegrationTest
 
         //Delete the created bucket
         await storageSvc.DeleteBucketAsync(Constants.BucketName);
+
+        //Verify the bucket has been deleted
+        await Assert.ThrowsExceptionAsync<ErrorException>(async () =>
+            await storageSvc.HeadBucketAsync(Constants.BucketName));
     }
     
     /// <summary>

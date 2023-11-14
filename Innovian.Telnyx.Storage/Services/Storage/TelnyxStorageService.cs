@@ -187,11 +187,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     public async Task DeleteBucketAsync(string bucketName, CancellationToken cancellationToken = default)
     {
         //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
-        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
-        if (!baseAddress.HasValue)
-            throw new TargetNotFoundException();
-
-        var uri = new Uri($"{baseAddress.Value}/{bucketName}");
+        var uri = new Uri($"https://{bucketName}.telnyxstorage.com");
 
         //Delete the bucket from Telnyx
         var client = BuildHttpClient();
