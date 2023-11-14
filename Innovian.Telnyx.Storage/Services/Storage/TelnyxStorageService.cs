@@ -449,7 +449,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         if (!baseAddress.HasValue)
             throw new TargetNotFoundException();
 
-        var uri = new Uri($"{baseAddress.Value}/{bucketName}?list-type=2");
+        var uri = new Uri($"{baseAddress.Value}/?list-type=2");
 
         var client = BuildHttpClient();
         var response = await client.GetAsync(uri, cancellationToken);
