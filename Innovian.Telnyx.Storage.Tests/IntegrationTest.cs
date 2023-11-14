@@ -1,10 +1,11 @@
-﻿//  -------------------------------------------------------------
-//  Copyright (c) 2023 Innovian Corporation. All rights reserved.
-//  -------------------------------------------------------------
+﻿// -------------------------------------------------------------
+// Copyright (c) 2023 Innovian Corporation. All rights reserved.
+// -------------------------------------------------------------
 
 using System.Security.Cryptography;
 using Innovian.Telnyx.Storage.Enums;
 using Innovian.Telnyx.Storage.Exceptions;
+using Innovian.Telnyx.Storage.Extensions;
 using Innovian.Telnyx.Storage.Services.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -74,10 +75,12 @@ public class IntegrationTest
         var originalHash = await ComputeFileHashAsync(fileName);
         
         //Create a bucket
-        await storageSvc.CreateBucketAsync(Constants.BucketName, LocationConstraint.Dallas);
+        await storageSvc.CreateBucketAsync(Constants.BucketName, LocationConstraint.Central);
 
         //Get the bucket location
         var bucketLocation = await storageSvc.GetBucketLocationAsync(Constants.BucketName);
+        Assert.IsTrue(bucketLocation.HasValue);
+        Assert.AreEqual(bucketLocation.Value.LocationConstraint, LocationConstraint.Central.GetValueFromEnumMember());
 
         //Test that this bucket exists
         var existingBucketExistenceCheck = await storageSvc.HeadBucketAsync(Constants.BucketName);
