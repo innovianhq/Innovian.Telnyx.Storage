@@ -198,7 +198,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         if (!baseAddress.HasValue)
             return false;
 
-        var uri = new Uri($"{baseAddress.Value}/{bucketName}");
+        var uri = new Uri($"{baseAddress.Value}");
 
         var client = BuildHttpClient();
         var msg = new HttpRequestMessage(HttpMethod.Head, uri);
