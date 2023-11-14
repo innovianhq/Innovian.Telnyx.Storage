@@ -507,27 +507,26 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     {
         //Determine if the cache contains the bucket name
         var cacheKey = bucketName.ToLowerInvariant();
-        if (_bucketEndpointCache.ContainsKey(cacheKey))
+
+        if (_bucketEndpointCache.TryGetValue(cacheKey, out var cacheValue))
         {
-            //Retrieve the location of the bucket
-            var bucketLocation = await GetBucketLocationAsync(bucketName, cancellationToken);
-
-            if (!bucketLocation.HasValue)
-                return new ConditionalValue<string>();
-
-            //Update the cache
-            _bucketEndpointCache[cacheKey] = bucketLocation.Value;
-
-            //We don't always want the bucket name in here
-            var bucketNameToAdd = includeBucketInSubdomain ? bucketName + '.' : string.Empty;
-
-            return new ConditionalValue<string>($"https://{bucketNameToAdd}{bucketLocation.Value}.telnyxstorage.com");
+            var bucketSubdomain = includeBucketInSubdomain ? $"{bucketName}." : string.Empty;
+            return new ConditionalValue<string>($"https://{bucketSubdomain}{cacheValue}.telnyxstorage.com");
         }
 
-        //Populate from the value in the cache
-        var cacheValue = _bucketEndpointCache[cacheKey];
-        var bucketSubdomain = includeBucketInSubdomain ? $"{bucketName}." : string.Empty;
-        return new ConditionalValue<string>($"https://{bucketSubdomain}{cacheValue}.telnyxstorage.com");
+        //Retrieve the location of the bucket
+        var bucketLocation = await GetBucketLocationAsync(bucketName, cancellationToken);
+
+        if (!bucketLocation.HasValue)
+            return new ConditionalValue<string>();
+
+        //Update the cache
+        _bucketEndpointCache[cacheKey] = bucketLocation.Value;
+
+        //We don't always want the bucket name in here
+        var bucketNameToAdd = includeBucketInSubdomain ? bucketName + '.' : string.Empty;
+
+        return new ConditionalValue<string>($"https://{bucketNameToAdd}{bucketLocation.Value}.telnyxstorage.com");
     }
 
     /// <summary>
