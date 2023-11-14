@@ -3,6 +3,8 @@
 
 This is an unofficial .NET library for the Telnyx Storage API, targeting .NET 7 built by [Innovian](https://innovian.net).
 
+**Note that Telnyx is making significant changes to their API in an ongoing basis and they don't yet support API versioning, so while this pipeline performs an E2E test daily so I can get a heads up of anything that isn't working suddenly, it's possible that Telnyx may break this implementation from time to time. Keep this in mind before using this in a production environment.**
+
 ## Installation
 Using the .NET Core CLI tools:
 ```sh
