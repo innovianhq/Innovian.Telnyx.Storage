@@ -221,7 +221,8 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     public async Task DeleteObjectAsync(string bucketName, string objectName, CancellationToken cancellationToken = default)
     {
         //Retrieve the base address from the cache if available, but otherwise fall back to the location endpoint.
-        var baseAddress = await GetBaseAddress(bucketName, cancellationToken);
+        //In this case, we don't put the bucket name in the subdomain - just the 
+        var baseAddress = await GetBaseAddress(bucketName, cancellationToken, false);
         if (!baseAddress.HasValue)
             throw new TargetNotFoundException();
 
@@ -488,8 +489,9 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// </summary>
     /// <param name="bucketName">The name of the bucket.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="includeBucketInSubdomain">True if the bucket name should be placed in the subdomain value.</param>
     /// <returns></returns>
-    private async Task<ConditionalValue<string>> GetBaseAddress(string bucketName, CancellationToken cancellationToken)
+    private async Task<ConditionalValue<string>> GetBaseAddress(string bucketName, CancellationToken cancellationToken, bool includeBucketInSubdomain = true)
     {
         //Determine if the cache contains the bucket name
         var cacheKey = bucketName.ToLowerInvariant();
@@ -504,7 +506,10 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
             //Update the cache
             _bucketEndpointCache[cacheKey] = bucketLocation.Value;
 
-            return new ConditionalValue<string>($"https://{bucketName}.{bucketLocation.Value}.telnyxstorage.com");
+            //We don't always want the bucket name in here
+            var bucketNameToAdd = includeBucketInSubdomain ? bucketName + '.' : string.Empty;
+
+            return new ConditionalValue<string>($"https://{bucketNameToAdd}{bucketLocation.Value}.telnyxstorage.com");
         }
 
         return new ConditionalValue<string>();
