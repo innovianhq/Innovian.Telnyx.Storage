@@ -107,11 +107,27 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         var client = BuildHttpClient();
         var response = await client.GetAsync(uri, cancellationToken);
 
-        var parser = new RegexResultParser();
-        using var stringReader = new StringReader(await response.Content.ReadAsStringAsync(cancellationToken));
-        var deserializedValue = parser.ParseBucketLocationResult(await stringReader.ReadToEndAsync(cancellationToken));
+        var responseStr = await response.Content.ReadAsStringAsync(cancellationToken);
+        using var stringReader = new StringReader(responseStr);
+        var parserResponse = await stringReader.ReadToEndAsync(cancellationToken);
 
-        if (response.StatusCode == HttpStatusCode.OK && deserializedValue != null)
+        if (!response.IsSuccessStatusCode)
+        {
+            //Parse the error
+            var serializer = new XmlSerializer(typeof(ErrorResponse));
+            using var sr = new StringReader(responseStr);
+            var result = (ErrorResponse) serializer.Deserialize(sr);
+            throw new ErrorException(result.Code)
+            {
+                HostId = result.HostId,
+                RequestId = result.RequestId
+            };
+        }
+
+        var parser = new RegexResultParser();
+        var deserializedValue = parser.ParseBucketLocationResult(parserResponse);
+
+        if (deserializedValue != null)
         {
             //Update the cache with the identified value
             _bucketEndpointCache[bucketName.ToLowerInvariant()] = deserializedValue;
