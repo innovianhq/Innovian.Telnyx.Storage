@@ -343,10 +343,9 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         var uri = new Uri($"{baseAddress.Value}/{objectName}");
 
         var client = BuildHttpClient();
-        client.DefaultRequestHeaders.Add("x-amz-server-side-encryption", "1");
-
         
         var streamContent = new StreamContent(File.OpenRead(filePath));
+
         streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 
         //using var ms = new MemoryStream();
@@ -382,7 +381,6 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         var uri = new Uri($"{baseAddress.Value}/{objectName}");
 
         var client = BuildHttpClient();
-        client.DefaultRequestHeaders.Add("x-amz-server-side-encryption", "1");
 
         using var ms = new MemoryStream(content);
         var streamContent = new StreamContent(ms);
