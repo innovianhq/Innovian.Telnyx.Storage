@@ -1,6 +1,6 @@
-﻿//  -------------------------------------------------------------
-//  Copyright (c) 2023 Innovian Corporation. All rights reserved.
-//  -------------------------------------------------------------
+﻿// -------------------------------------------------------------
+// Copyright (c) 2023 Innovian Corporation. All rights reserved.
+// -------------------------------------------------------------
 
 using System.Xml.Serialization;
 using Innovian.Telnyx.Storage.Services.Storage.Responses;
@@ -21,8 +21,12 @@ public class ListBucketResultTests
         var result = (ListBucketResult)serializer.Deserialize(sr);
 
         Assert.IsNotNull(result);
+        Assert.AreEqual(Constants.BucketName, result.Name);
         Assert.IsNotNull(result.Contents);
         Assert.AreEqual(3, result.Contents.Length);
+
+        Assert.AreEqual("alt2.txt", result.Contents[0].Key);
+        Assert.AreEqual(1048716, result.Contents[0].Size);
     }
 
     [TestMethod]
