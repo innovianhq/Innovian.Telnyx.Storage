@@ -247,7 +247,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         if (!baseAddress.HasValue)
             throw new TargetNotFoundException();
 
-        var uri = new Uri($"{baseAddress.Value}/{bucketName}/{objectName}{(uploadId == null ? "" : $"?uploadId={uploadId}")}");
+        var uri = new Uri($"{baseAddress.Value}/{objectName}{(uploadId == null ? "" : $"?uploadId={uploadId}")}");
 
         var client = BuildHttpClient();
         client.DefaultRequestHeaders.Add("Accept", "application/octet-stream");
