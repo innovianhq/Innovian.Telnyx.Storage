@@ -129,7 +129,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <param name="isPublic">Indicates the visibility of the bucket.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    public async Task CreateBucketAsync(string bucketName, LocationConstraint locationConstraint, bool isPublic, CancellationToken cancellationToken = default)
+    public async Task CreateBucketAsync(string bucketName, LocationConstraint locationConstraint, bool isPublic = false, CancellationToken cancellationToken = default)
     {
         if (!Validators.IsBucketNameValid(bucketName))
             throw new ValidityFailureException(Validators.BucketNameValidityMessage);
