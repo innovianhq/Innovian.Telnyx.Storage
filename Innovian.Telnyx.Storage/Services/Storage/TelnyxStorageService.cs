@@ -77,7 +77,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
     /// <returns></returns>
     public async Task<ConditionalValue<ListAllMyBucketsResult>> ListBucketsAsync(CancellationToken cancellationToken = default)
     {
-        var uri = new Uri("https://storage.telnyx.com/"); //Intended endpoint per email notification 10/9/2023
+        var uri = new Uri("https://telnyxstorage.com/");
 
         var client = BuildHttpClient();
         var response = await client.GetAsync(uri, cancellationToken);
