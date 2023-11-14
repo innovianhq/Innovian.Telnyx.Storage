@@ -62,15 +62,17 @@ public class IntegrationTest
         var storageSvc = BuildStorageService();
 
         //Start with a potential clean up task
-        await CleanupBucketAsync();
+        await Assert.ThrowsExceptionAsync<ErrorException>(async () => await CleanupBucketAsync());
 
         const string fileName = "onemegabyte.txt";
 
         //Test for non-existent bucket existence
         const string nonExistentBucketName = "integration-nonexistent-test-bucket";
-        var nonExistentBucketExistenceCheck = await storageSvc.HeadBucketAsync(nonExistentBucketName);
-        Assert.IsFalse(nonExistentBucketExistenceCheck);
 
+        //Get the bucket location
+        await Assert.ThrowsExceptionAsync<ErrorException>(async () =>
+            await storageSvc.HeadBucketAsync(nonExistentBucketName));
+        
         //Get the MD5 has of the input file
         var originalHash = await ComputeFileHashAsync(fileName);
         
@@ -78,10 +80,10 @@ public class IntegrationTest
         await storageSvc.CreateBucketAsync(Constants.BucketName, LocationConstraint.Central);
 
         //Get the bucket location
-        var bucketLocation = await storageSvc.GetBucketLocationAsync(Constants.BucketName);
-        Assert.IsTrue(bucketLocation.HasValue);
-        Assert.AreEqual(bucketLocation.Value, LocationConstraint.Central.GetValueFromEnumMember());
-
+        var bucketLocationResult = await storageSvc.GetBucketLocationAsync(Constants.BucketName);
+        Assert.IsTrue(bucketLocationResult.HasValue);
+        Assert.AreEqual(bucketLocationResult.Value, LocationConstraint.Central.GetValueFromEnumMember());
+        
         //Test that this bucket exists
         var existingBucketExistenceCheck = await storageSvc.HeadBucketAsync(Constants.BucketName);
         Assert.IsTrue(existingBucketExistenceCheck);

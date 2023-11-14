@@ -528,7 +528,10 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
             return new ConditionalValue<string>($"https://{bucketNameToAdd}{bucketLocation.Value}.telnyxstorage.com");
         }
 
-        return new ConditionalValue<string>();
+        //Populate from the value in the cache
+        var cacheValue = _bucketEndpointCache[cacheKey];
+        var bucketSubdomain = includeBucketInSubdomain ? $"{bucketName}." : string.Empty;
+        return new ConditionalValue<string>($"https://{bucketSubdomain}{cacheValue}.telnyxstorage.com");
     }
 
     /// <summary>
