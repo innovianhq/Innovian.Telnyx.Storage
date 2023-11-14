@@ -281,7 +281,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         if (!baseAddress.HasValue)
             throw new TargetNotFoundException();
 
-        var uri = new Uri($"{baseAddress.Value}/{bucketName}/{objectName}");
+        var uri = new Uri($"{baseAddress.Value}/{objectName}");
 
         var client = BuildHttpClient();
         var msg = new HttpRequestMessage(HttpMethod.Head, uri);
