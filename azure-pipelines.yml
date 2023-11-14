@@ -39,7 +39,7 @@ steps:
     command: 'test'
     projects: '**/$(ProjectName).Tests.csproj'
   env:
-    TelnyxApiKey: $(TelnyxApiKey)
+    Telnyx_ApiKey: $(TelnyxApiKey)
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet build'
