@@ -1,6 +1,6 @@
-﻿//  -------------------------------------------------------------
-//  Copyright (c) 2023 Innovian Corporation. All rights reserved.
-//  -------------------------------------------------------------
+﻿// -------------------------------------------------------------
+// Copyright (c) 2023 Innovian Corporation. All rights reserved.
+// -------------------------------------------------------------
 
 using Innovian.Telnyx.Storage.Core;
 using Innovian.Telnyx.Storage.Enums;
@@ -33,7 +33,7 @@ public interface ITelnyxStorageService
     /// <param name="locationConstraint">The region to create the bucket in.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns></returns>
-    Task CreateBucketAsync(string bucketName, LocationConstraint locationConstraint = LocationConstraint.Dallas, CancellationToken cancellationToken = default);
+    Task CreateBucketAsync(string bucketName, LocationConstraint locationConstraint, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes a bucket.
