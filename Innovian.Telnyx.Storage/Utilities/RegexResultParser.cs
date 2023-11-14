@@ -3,6 +3,7 @@
 // -------------------------------------------------------------
 
 using System.Text.RegularExpressions;
+using System.Xml.Serialization;
 
 namespace Innovian.Telnyx.Storage.Utilities;
 
@@ -15,6 +16,12 @@ internal sealed class RegexResultParser
     /// <returns></returns>
     public string? ParseBucketLocationResult(string xml)
     {
+        //Catch any error responses
+        if (xml.Contains("<Error><Code>"))
+        {
+            return null;
+        }
+
         var regex = new Regex(@""">[a-z0-9\-]+<\/LocationConstraint>");
         var match = regex.Match(xml);
         var matchedValue = match.Value.Replace("</LocationConstraint>", string.Empty);
