@@ -1,6 +1,6 @@
-﻿//  -------------------------------------------------------------
-//  Copyright (c) 2023 Innovian Corporation. All rights reserved.
-//  -------------------------------------------------------------
+﻿// -------------------------------------------------------------
+// Copyright (c) 2023 Innovian Corporation. All rights reserved.
+// -------------------------------------------------------------
 
 using System.Runtime.Serialization;
 
@@ -12,5 +12,9 @@ namespace Innovian.Telnyx.Storage.Enums;
 public enum LocationConstraint
 {
     [EnumMember(Value="us-central-1")]
-    Dallas,
+    Central,
+    [EnumMember(Value="us-east-1")]
+    East,
+    [EnumMember(Value="us-west-1")]
+    West
 }
