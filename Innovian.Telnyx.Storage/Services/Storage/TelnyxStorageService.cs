@@ -340,7 +340,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         if (!baseAddress.HasValue)
             throw new TargetNotFoundException();
 
-        var uri = new Uri($"{baseAddress.Value}/{bucketName}/{objectName}");
+        var uri = new Uri($"{baseAddress.Value}/{objectName}");
 
         var client = BuildHttpClient();
         client.DefaultRequestHeaders.Add("x-amz-server-side-encryption", "1");
@@ -379,7 +379,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         if (!baseAddress.HasValue)
             throw new TargetNotFoundException();
 
-        var uri = new Uri($"{baseAddress.Value}/{bucketName}/{objectName}");
+        var uri = new Uri($"{baseAddress.Value}/{objectName}");
 
         var client = BuildHttpClient();
         client.DefaultRequestHeaders.Add("x-amz-server-side-encryption", "1");
@@ -416,7 +416,7 @@ public sealed class TelnyxStorageService : ITelnyxStorageService
         if (!baseAddress.HasValue)
             throw new TargetNotFoundException();
 
-        var uri = new Uri($"{baseAddress.Value}/{bucketName}?delete=true");
+        var uri = new Uri($"{baseAddress.Value}?delete=true");
         var req = new DeleteObjectsRequest
         {
             Objects = keys.Select(k => new DeleteObject
